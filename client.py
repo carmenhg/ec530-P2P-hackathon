@@ -71,8 +71,8 @@ listener.start()
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind(('0.0.0.0', dport))
 
+message_no = 0
 while True:
-    message_no = 0
     msg = input('> ')
     sock.sendto(msg.encode(), (ip, sport))
     #push message sent to db
