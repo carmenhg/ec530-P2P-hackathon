@@ -2,9 +2,21 @@ import socket
 import sys
 import threading
 
-rendezvous = ('204.8.153.51', 55555)
+# DB connection
+conn = sqlite3.connect('messages.db')
+#DB cursor
+cur = conn.cursor()
+
+#create a table for storing data if it doesn't exist yet 
+cur.execute("""CREATE TABLE IF NOT EXISTS messages(
+            client1 INT PRIMARY KEY,
+            client2 INT,
+            message TEXT);
+            """)
+conn.commit()
 
 # connect to rendezvous
+rendezvous = ('204.8.153.51', 55555)
 print('connecting to rendezvous server')
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -60,64 +72,9 @@ sock.bind(('0.0.0.0', dport))
 while True:
     msg = input('> ')
     sock.sendto(msg.encode(), (ip, sport))
-    #create a db
-    # create a database connection
-    create_connection(r"C:\sqlite\db\pythonsqlite.db")
+    #push message sent to db
+    cur.execute("""INSERT INTO messages(client1, client2, message) 
+    VALUES(?, ?, ?);""", sock.gethostname()  , ip, msg)
+    conn.commit()
 
-    sql_create_projects_table = """ CREATE TABLE IF NOT EXISTS projects (
-                                        id integer PRIMARY KEY,
-                                        name text NOT NULL,
-                                        begin_date text,
-                                        end_date text
-                                    ); """
-
-    sql_create_tasks_table = """CREATE TABLE IF NOT EXISTS tasks (
-                                    id integer PRIMARY KEY,
-                                    name text NOT NULL,
-                                    priority integer,
-                                    status_id integer NOT NULL,
-                                    project_id integer NOT NULL,
-                                    begin_date text NOT NULL,
-                                    end_date text NOT NULL,
-                                    FOREIGN KEY (project_id) REFERENCES projects (id)
-                                );"""
-    # create tables
-    if conn is not None:
-        # create projects table
-        create_table(conn, sql_create_projects_table)
-
-        # create tasks table
-        create_table(conn, sql_create_tasks_table)
-    else:
-        print("Error! cannot create the database connection.")
-
-#DB Connection 
-def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-        print("Connection created")
-        return conn
-    except Error as e:
-        print(e)
-
-    return conn
-
-def create_table(conn, create_table_sql):
-    """ create a table from the create_table_sql statement
-    :param conn: Connection object
-    :param create_table_sql: a CREATE TABLE statement
-    :return:
-    """
-    try:
-        c = conn.cursor()
-        c.execute(create_table_sql)
-        print("Table created")
-    except Error as e:
-        print(e)
-
+    
