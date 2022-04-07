@@ -79,7 +79,7 @@ while True:
     #create tuple to hold values that will be saved to db 
     message = (ip, ip, msg, message_no)
     cur.execute("""INSERT INTO messages 
-    VALUES(?, ?, ?);""", message)
+    VALUES(?, ?, ?, ?);""", message)
     conn.commit()
     message_no = message_no + 1
 
