@@ -1,6 +1,7 @@
 import socket
 import sys
 import threading
+import sqlite3
 
 # DB connection
 conn = sqlite3.connect('messages.db')
@@ -9,14 +10,14 @@ cur = conn.cursor()
 
 #create a table for storing data if it doesn't exist yet 
 cur.execute("""CREATE TABLE IF NOT EXISTS messages(
-            client1 INT PRIMARY KEY,
+            client1 INT ,
             client2 INT,
-            message TEXT);
+            message TEXT PRIMARY KEY);
             """)
 conn.commit()
 
 # connect to rendezvous
-rendezvous = ('204.8.153.51', 55555)
+rendezvous = ('52.170.57.76', 55555)
 print('connecting to rendezvous server')
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -61,7 +62,7 @@ def listen():
         data = sock.recv(1024)
         print('\rpeer: {}\n> '.format(data.decode()), end='')
 
-listener = threading.Thread(target=listen, daemon=True);
+listener = threading.Thread(target=listen, daemon=True)
 listener.start()
 
 # send messages
@@ -73,8 +74,10 @@ while True:
     msg = input('> ')
     sock.sendto(msg.encode(), (ip, sport))
     #push message sent to db
-    cur.execute("""INSERT INTO messages(client1, client2, message) 
-    VALUES(?, ?, ?);""", sock.gethostname()  , ip, msg)
+    #create tuple to hold values that will be saved to db 
+    message = (ip, ip, msg)
+    cur.execute("""INSERT INTO messages 
+    VALUES(?, ?, ?);""", message)
     conn.commit()
 
     
