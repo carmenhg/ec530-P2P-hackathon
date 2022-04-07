@@ -12,7 +12,8 @@ cur = conn.cursor()
 cur.execute("""CREATE TABLE IF NOT EXISTS messages(
             client1 INT ,
             client2 INT,
-            message TEXT PRIMARY KEY);
+            message TEXT,
+            message_number INT PRIMARY KEY);
             """)
 conn.commit()
 
@@ -71,13 +72,15 @@ sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind(('0.0.0.0', dport))
 
 while True:
+    message_no = 0
     msg = input('> ')
     sock.sendto(msg.encode(), (ip, sport))
     #push message sent to db
     #create tuple to hold values that will be saved to db 
-    message = (ip, ip, msg)
+    message = (ip, ip, msg, message_no)
     cur.execute("""INSERT INTO messages 
     VALUES(?, ?, ?);""", message)
     conn.commit()
+    message_no = message_no + 1
 
     
